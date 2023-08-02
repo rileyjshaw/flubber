@@ -11,11 +11,6 @@ const fs = require('fs');
 const {parseMidi, writeMidi} = require('midi-file');
 const {ceil, floor, random} = Math;
 
-// Approximate % of notes that will be played correctly.
-const skill = 19 / 20;
-// How close the missed notes should be to the intended note. We only extend
-// out of this range if all surrounding options are already held.
-const flubProximity = 2;
 // List of notes that are currently being "held down".
 const heldKeys = {};
 // List of numbers mapping note intended to hit => note actually hit.
@@ -24,6 +19,11 @@ const flubbedNotes = {};
 // Pull in a list of tracks from the MIDI file.
 const inFile = process.argv[2] || './moonlight.mid';
 const outFile = process.argv[3] || './flubbed.mid';
+// Approximate % of notes that will be played correctly.
+const skill = (Number(process.argv[4]) || 95) / 100;
+// How close the missed notes should be to the intended note. We only extend
+// out of this range if all surrounding options are already held.
+const flubProximity = Number(process.argv[5]) || 2;
 const midiFile = fs.readFileSync(inFile);
 const song = parseMidi(midiFile);
 
