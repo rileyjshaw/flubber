@@ -8,8 +8,8 @@
  *  > node index.js [path/to/midi/file.mid [path/to/output.mid]]
  */
 const fs = require('fs');
-const {parseMidi, writeMidi} = require('midi-file');
-const {ceil, floor, random} = Math;
+const { parseMidi, writeMidi } = require('midi-file');
+const { ceil, floor, random } = Math;
 
 // List of notes that are currently being "held down".
 const heldKeys = {};
@@ -29,44 +29,46 @@ const song = parseMidi(midiFile);
 
 // Each MIDI track is a series of events, some of which indicate noteOn or
 // noteOff.
-song.tracks.forEach(track => track.forEach(event => {
-	const {type, noteNumber, velocity} = event;
-	const noteOn = type === 'noteOn';
-	const noteOff = type === 'noteOff' || noteOn && !velocity;
+song.tracks.forEach(track =>
+	track.forEach(event => {
+		const { type, noteNumber, velocity } = event;
+		const noteOn = type === 'noteOn';
+		const noteOff = type === 'noteOff' || (noteOn && !velocity);
 
-	if (noteOff) {
-		let note = noteNumber;
+		if (noteOff) {
+			let note = noteNumber;
 
-		// If the note was flubbed, we use the note that was actually played.
-		const actualNote = flubbedNotes[noteNumber];
-		if (typeof actualNote === 'number') {
-			note = event.noteNumber = actualNote;
-			delete flubbedNotes[noteNumber];
+			// If the note was flubbed, we use the note that was actually played.
+			const actualNote = flubbedNotes[noteNumber];
+			if (typeof actualNote === 'number') {
+				note = event.noteNumber = actualNote;
+				delete flubbedNotes[noteNumber];
+			}
+
+			heldKeys[note] = false;
+		} else if (noteOn) {
+			let note = noteNumber;
+
+			// Flub it, perhaps?
+			if (heldKeys[noteNumber] || random() > skill) {
+				let i = 0;
+				do {
+					// Slowly increase the flubRange to prevent infinite loops when
+					// all the notes within range are already held down.
+					const flubRange = flubProximity + floor(i / 20);
+					const sign = random() < 0.5 ? 1 : -1;
+					note = noteNumber + sign * ceil(random() * flubRange);
+					++i;
+				} while (heldKeys[note]);
+
+				event.noteNumber = note;
+				flubbedNotes[noteNumber] = note;
+			}
+
+			heldKeys[note] = true;
 		}
-
-		heldKeys[note] = false;
-	} else if (noteOn) {
-		let note = noteNumber;
-
-		// Flub it, perhaps?
-		if (heldKeys[noteNumber] || random() > skill) {
-			let i = 0;
-			do {
-				// Slowly increase the flubRange to prevent infinite loops when
-				// all the notes within range are already held down.
-				const flubRange = flubProximity + floor(i / 20);
-				const sign = random() < 0.5 ? 1 : -1;
-				note = noteNumber + sign * ceil(random() * flubRange);
-				++i;
-			} while(heldKeys[note]);
-
-			event.noteNumber = note;
-			flubbedNotes[noteNumber] = note;
-		}
-
-		heldKeys[note] = true;
-	}
-}));
+	})
+);
 
 // Write the modified song to disk.
 const output = writeMidi(song);
