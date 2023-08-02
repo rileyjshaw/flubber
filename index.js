@@ -70,5 +70,5 @@ song.tracks.forEach(track => track.forEach(event => {
 
 // Write the modified song to disk.
 const output = writeMidi(song);
-const outputBuffer = new Buffer(output);
+const outputBuffer = Buffer.from(output);
 fs.writeFileSync(outFile, outputBuffer);

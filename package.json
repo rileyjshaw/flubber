@@ -24,6 +24,6 @@
   },
   "homepage": "https://github.com/rileyjshaw/flubber#readme",
   "dependencies": {
-    "midi-file": "^1.0.2"
+    "midi-file": "^1.2.4"
   }
 }
